@@ -1,20 +1,61 @@
-# Day 1
+# RepoPilot Roadmap
 
-## 已完成
+## Sprint 1
 
-- [x] GitHub 初始化
-- [x] README
-- [x] PRD
+- Project initialization
 
-## 今日目标
+## Sprint 2
 
-- [ ] 前端初始化
-- [ ] FastAPI 初始化
+- Frontend & Backend scaffolding
 
-## 遇到的问题
+## Sprint 3
 
-（每天记录）
+- Repository import
+- Metadata
+- Repository clone
+- File tree parser
 
-## 明日计划
+## Sprint 4
 
-（每天更新）
+- Knowledge Layer
+- RepositoryDocument
+- RepositoryContext
+- FileReaderService
+- ContextBuilder
+
+## Sprint 5
+
+- DeepSeek integration
+- Repository Summary
+- Prompt optimization
+
+## Sprint 6
+
+- CodeIndexer
+- Source code parsing
+- Symbol extraction
+- Function & class indexing
+
+## Sprint 7
+
+- Architecture generation
+- Reading guide
+- Repository navigation
+
+## Sprint 8
+
+- Repository Chat
+- Context retrieval
+- RAG optimization
+
+## Sprint 9
+
+- AI Code Review
+- Improvement suggestions
+
+## Sprint 10
+
+- Deployment
+- Performance optimization
+- Documentation
+- Open source release

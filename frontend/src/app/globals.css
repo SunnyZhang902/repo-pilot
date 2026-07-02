@@ -24,3 +24,167 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Repository Dashboard */
+.dashboard {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.dashboard-header {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.dashboard-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.repository-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #525252;
+}
+
+.form-input {
+  padding: 10px 12px;
+  font-size: 1rem;
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  background: #fff;
+  color: #171717;
+}
+
+.form-input:focus {
+  outline: 2px solid #171717;
+  outline-offset: 1px;
+}
+
+.form-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-button {
+  padding: 10px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #171717;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.form-button:hover:not(:disabled) {
+  background: #404040;
+}
+
+.form-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-message {
+  margin: 0 0 16px;
+  font-size: 0.875rem;
+  color: #525252;
+}
+
+.error-message {
+  margin: 0 0 16px;
+  padding: 12px;
+  font-size: 0.875rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+}
+
+.section-title {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.repository-card {
+  padding-top: 24px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.info-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.info-label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #525252;
+}
+
+.info-value {
+  margin: 0;
+  font-size: 0.9375rem;
+  word-break: break-word;
+}
+
+@media (prefers-color-scheme: dark) {
+  .dashboard-header,
+  .repository-card {
+    border-color: #404040;
+  }
+
+  .form-label,
+  .info-label,
+  .status-message {
+    color: #a3a3a3;
+  }
+
+  .form-input {
+    background: #171717;
+    border-color: #404040;
+    color: #ededed;
+  }
+
+  .form-input:focus {
+    outline-color: #ededed;
+  }
+
+  .form-button {
+    background: #ededed;
+    color: #171717;
+  }
+
+  .form-button:hover:not(:disabled) {
+    background: #d4d4d4;
+  }
+
+  .error-message {
+    color: #fca5a5;
+    background: #450a0a;
+    border-color: #7f1d1d;
+  }
+}

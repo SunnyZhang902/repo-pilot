@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from app.schemas.parser import RepositoryNode
+
 
 class RepositoryImportRequest(BaseModel):
     url: str
@@ -18,3 +20,9 @@ class RepositoryMetadata(BaseModel):
     forks: int
     language: str | None
     default_branch: str
+
+
+class RepositoryAnalysis(BaseModel):
+    metadata: RepositoryMetadata
+    local_path: str
+    tree: RepositoryNode
