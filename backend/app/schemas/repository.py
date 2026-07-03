@@ -26,3 +26,7 @@ class RepositoryAnalysis(BaseModel):
     metadata: RepositoryMetadata
     local_path: str
     tree: RepositoryNode
+
+
+class RepositorySummaryResponse(BaseModel):
+    summary: str

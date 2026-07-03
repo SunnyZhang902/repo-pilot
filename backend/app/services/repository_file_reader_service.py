@@ -28,7 +28,7 @@ DOCUMENT_TYPE_MAP: dict[str, str] = {
 }
 
 
-class FileReaderService:
+class RepositoryFileReaderService:
     """Reads supported configuration and documentation files from a repository root."""
 
     def collect_documents(self, repository_path: str) -> list[RepositoryDocument]:

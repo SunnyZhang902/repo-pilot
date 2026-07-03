@@ -1,7 +1,8 @@
+from app.core.timer import Timer
 from app.schemas.repository import RepositoryAnalysis
 from app.services.github_service import GitHubService
-from app.services.parser_service import ParserService
-from app.services.repository_service import RepositoryService
+from app.services.repository_clone_service import RepositoryCloneService
+from app.services.repository_parser_service import RepositoryParserService
 
 
 class RepositoryAnalyzer:
@@ -9,8 +10,8 @@ class RepositoryAnalyzer:
 
     def __init__(self) -> None:
         self.github_service = GitHubService()
-        self.repository_service = RepositoryService()
-        self.parser_service = ParserService()
+        self.repository_clone_service = RepositoryCloneService()
+        self.repository_parser_service = RepositoryParserService()
 
     async def analyze(self, url: str) -> RepositoryAnalysis:
         """
@@ -20,9 +21,14 @@ class RepositoryAnalyzer:
         2. Clone the repository locally
         3. Parse the local file tree
         """
-        metadata = await self.github_service.get_repository_metadata(url)
-        local_path = await self.repository_service.clone_repository(url)
-        tree = self.parser_service.parse_repository(local_path)
+        with Timer("GitHub Metadata"):
+            metadata = await self.github_service.get_repository_metadata(url)
+
+        with Timer("Clone Repository"):
+            local_path = await self.repository_clone_service.clone_repository(url)
+
+        with Timer("Parse Repository"):
+            tree = self.repository_parser_service.parse_repository(local_path)
 
         return RepositoryAnalysis(
             metadata=metadata,

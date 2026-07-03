@@ -11,7 +11,7 @@ IGNORED_NAMES = frozenset({".git", "__pycache__", "node_modules", ".venv", ".nex
 DEFAULT_MAX_DEPTH = 32
 
 
-class ParserService:
+class RepositoryParserService:
     """Service for building a file tree from a local repository directory."""
 
     def __init__(self, max_depth: int = DEFAULT_MAX_DEPTH) -> None:
