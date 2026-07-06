@@ -7,32 +7,32 @@ from git import Repo
 from git.exc import GitCommandError
 
 from app.core.logger import logger
+from app.utils.workspace import WorkspaceManager
 
-# GitHub repository URLs must use this prefix.
 GITHUB_URL_PREFIX = "https://github.com/"
 
-# backend/workspace — created automatically if missing.
-BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
-WORKSPACE_DIR = BACKEND_ROOT / "workspace"
-
-# Maximum seconds to wait for a shallow clone before aborting.
 CLONE_TIMEOUT_SECONDS = 300
 
-# Directory and file names excluded from statistics traversal.
 IGNORED_NAMES = frozenset({".git", "__pycache__", "node_modules", ".venv", ".next"})
+
+LONG_PATH_ERROR_MARKERS = (
+    "Filename too long",
+    "cannot create directory",
+)
+
+LONG_PATH_ERROR_DETAIL = (
+    "Repository checkout failed because the repository contains file paths "
+    "longer than Windows allows."
+)
 
 
 class RepositoryCloneService:
     """Service for cloning and managing local repository copies."""
 
-    def __init__(self, workspace_dir: Path | None = None) -> None:
-        self.workspace_dir = workspace_dir or WORKSPACE_DIR
-        self.workspace_dir.mkdir(parents=True, exist_ok=True)
-
     async def clone_repository(self, url: str) -> str:
-        """Clone a GitHub repository into the workspace directory.
+        """Clone a GitHub repository into a hash-based workspace directory.
 
-        Performs a shallow clone (depth=1) into workspace/{owner}/{repository}.
+        Performs a shallow clone (depth=1) into workspace/{cache_key}.
         Skips cloning if the target directory already exists.
 
         Args:
@@ -44,16 +44,19 @@ class RepositoryCloneService:
         Raises:
             HTTPException: On invalid URL, clone failure, or timeout.
         """
-        owner, repo_name = self._parse_github_url(url)
-        local_path = self.workspace_dir / owner / repo_name
+        self._validate_github_url(url)
+        local_path = WorkspaceManager.get_workspace_path(url)
+
+        logger.info("Workspace: %s", WorkspaceManager.get_workspace_log_path(url))
 
         if local_path.exists():
-            logger.info("Repository already exists: Skipping clone.")
+            logger.info("Workspace Cache Hit")
             self._log_repository_statistics(local_path)
+            logger.info("Workspace Ready")
             return str(local_path.resolve())
 
+        local_path.mkdir(parents=True, exist_ok=True)
         logger.info("Starting clone: Repository: %s", url)
-        local_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
             await asyncio.wait_for(
@@ -61,21 +64,26 @@ class RepositoryCloneService:
                 timeout=CLONE_TIMEOUT_SECONDS,
             )
         except asyncio.TimeoutError as exc:
-            self._cleanup_partial_clone(local_path)
+            self._cleanup_workspace(local_path)
             logger.exception("Clone failed.")
             raise HTTPException(
                 status_code=504,
                 detail="Repository clone timed out.",
             ) from exc
         except GitCommandError as exc:
-            self._cleanup_partial_clone(local_path)
+            self._cleanup_workspace(local_path)
             logger.exception("Clone failed.")
+            if self._is_long_path_error(exc):
+                raise HTTPException(
+                    status_code=500,
+                    detail=LONG_PATH_ERROR_DETAIL,
+                ) from exc
             raise HTTPException(
                 status_code=500,
                 detail="Failed to clone repository from GitHub.",
             ) from exc
         except Exception as exc:
-            self._cleanup_partial_clone(local_path)
+            self._cleanup_workspace(local_path)
             logger.exception("Clone failed.")
             raise HTTPException(
                 status_code=500,
@@ -84,6 +92,7 @@ class RepositoryCloneService:
 
         logger.info("Clone completed successfully.")
         self._log_repository_statistics(local_path)
+        logger.info("Workspace Ready")
         return str(local_path.resolve())
 
     def _clone(self, url: str, local_path: Path) -> None:
@@ -94,13 +103,22 @@ class RepositoryCloneService:
             multi_options=["--depth", "1"],
         )
 
-    def _cleanup_partial_clone(self, local_path: Path) -> None:
-        """Remove a partially cloned repository directory, ignoring cleanup errors."""
+    def _cleanup_workspace(self, local_path: Path) -> None:
+        """Remove a partial workspace directory, ignoring cleanup errors."""
+        logger.info("Cleaning workspace...")
         try:
             if local_path.exists():
                 shutil.rmtree(local_path)
         except Exception:
-            pass
+            logger.warning("Failed to fully clean workspace: %s", local_path)
+
+    def _is_long_path_error(self, exc: GitCommandError) -> bool:
+        """Return True if the Git error indicates a Windows long path failure."""
+        stderr = exc.stderr or ""
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode("utf-8", errors="replace")
+        message = f"{stderr} {exc}"
+        return any(marker in message for marker in LONG_PATH_ERROR_MARKERS)
 
     def _log_repository_statistics(self, root: Path) -> None:
         """Count and log directory and file totals for a local repository."""
@@ -129,18 +147,10 @@ class RepositoryCloneService:
 
         return dir_count, file_count
 
-    def _parse_github_url(self, url: str) -> tuple[str, str]:
-        """Validate a GitHub repository URL and extract owner and repository name.
+    def _validate_github_url(self, url: str) -> None:
+        """Validate a GitHub repository URL.
 
         Expected format: https://github.com/{owner}/{repository}[...]
-        Example: https://github.com/langchain-ai/langgraph
-                 -> owner="langchain-ai", repo="langgraph"
-
-        Args:
-            url: GitHub repository URL.
-
-        Returns:
-            Tuple of (owner, repository name).
 
         Raises:
             HTTPException: If the URL is invalid.
@@ -168,5 +178,3 @@ class RepositoryCloneService:
                 status_code=400,
                 detail="Invalid GitHub repository URL: missing owner or repository name",
             )
-
-        return owner, repo_name

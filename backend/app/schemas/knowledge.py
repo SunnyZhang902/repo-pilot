@@ -11,7 +11,7 @@ class RepositoryKnowledge(BaseModel):
     Aggregates normalized facts about a repository — metadata, structure,
     documents, and derived signals — without embedding extraction logic.
 
-    Designed to be consumed by PromptBuilder and future workflows such as
+    Designed to be consumed by the Prompt Engine and future workflows such as
     Repository Chat, Architecture Analysis, Reading Guide, and Code Review.
     Additional fields can be added as the Knowledge Layer grows.
     """

@@ -144,15 +144,55 @@ After the core AI pipeline and frontend MVP are completed, the focus shifts from
 feature development to validating repository understanding quality, prompt quality,
 and overall user experience before introducing more advanced AI features.
 
-## Sprint — Benchmark & Prompt Optimization
+### Infrastructure
 
-🚧 **In Progress**
+- [x] ALTER-026 — Workspace Hash Cache & Git Environment Initialization
+- [x] ALTER-033 — Prompt Template Library
+- [x] ALTER-036 — Prompt Engine
 
-- [x] Repository Benchmark Suite ([repositories.md](../benchmark/repositories.md))
-- [x] Benchmark Template ([benchmark-template.md](../benchmark/benchmark-template.md))
-- [x] Prompt History ([prompt-history.md](../prompt-history.md))
-- [ ] Prompt Version Management
-- [ ] Prompt Optimization v2
+---
+
+## Sprint — Prompt Engineering
+
+✅ **Completed**
+
+- [x] Prompt Template Library（[backend/app/prompts/](../backend/app/prompts/)）
+- [x] Prompt Engine（[backend/app/prompt/](../backend/app/prompt/)）
+- [x] Prompt Version Registry（`PromptRegistry`）
+- [x] Prompt Loader（`PromptLoader` + cache）
+- [x] Prompt Renderer（`PromptRenderer` + placeholders）
+- [x] Prompt Configuration（`prompt_config.py` / `DEFAULT_SUMMARY_PROMPT`）
+- [x] `summary_prompt_v1.md`（Stable）
+- [x] `summary_prompt_v2.md`（Experimental template）
+- [x] [prompt-v2.md](../prompt-v2.md) design document
+
+### Remaining
+
+- [ ] Prompt v2 Benchmark
+- [ ] Prompt v2 Adoption（ALTER-038）
+- [ ] Prompt v3 Design
+
+See also: ALTER-033, ALTER-036, ALTER-038, [prompt-history.md](../prompt-history.md).
+
+---
+
+## Sprint — Benchmark
+
+### Completed
+
+- [x] Benchmark Repository Suite（[repositories.md](../benchmark/repositories.md)）
+- [x] Evaluation Guide（[evaluation-guide.md](../benchmark/evaluation-guide.md)）
+- [x] Prompt History（[prompt-history.md](../prompt-history.md)）
+- [x] Benchmark Result Directory（[benchmark/results/](../benchmark/results/)）
+- [x] Benchmark Template（[benchmark-template.md](../benchmark/benchmark-template.md)）
+
+### Remaining
+
+- [ ] Benchmark Automation（ALTER-024）
+- [ ] Prompt Regression Testing（ALTER-025）
+- [ ] Prompt v2 full benchmark run & score comparison
+
+---
 
 ### Prompt Optimization Workflow
 
@@ -178,63 +218,17 @@ RepoPilot 的 Prompt 优化遵循 **"Benchmark First"** 原则。
 
 任何 Prompt 修改，都必须经过 Benchmark 验证后才能进入正式版本。
 
-See also: [prompt-history.md](../prompt-history.md), [evaluation-guide.md](../benchmark/evaluation-guide.md), ALTER-026 (Prompt Engineering Workflow).
+See also: [evaluation-guide.md](../benchmark/evaluation-guide.md), ALTER-031 (Prompt Engineering Workflow).
 
 ---
 
-## Sprint — Repository Benchmark
+## Sprint — Prompt Evaluation & Iteration
 
 **Goals:**
 
-- Build a fixed benchmark repository list
-- Cover multiple ecosystems (Python, JavaScript, Go, Rust, Java, C++, AI Frameworks, Frontend)
-- Use the same repositories for every Prompt iteration
-- Record summary quality and generation performance
-
-**Deliverables:**
-
-- `benchmark-repositories.md`
-- Benchmark results
-
----
-
-## Sprint — Prompt Evaluation
-
-**Goals:**
-
-Create a repeatable evaluation rubric.
-
-**Metrics:**
-
-- Project understanding
-- Technology stack accuracy
-- Dependency understanding
-- Repository structure understanding
-- Reading guide quality
-
-Each metric uses a **0–2** score. Maximum score: **10**.
-
----
-
-## Sprint — Prompt Iteration
-
-**Goals:**
-
-Continuously improve `PromptBuilder`.
-
-**Roadmap:**
-
-```
-Prompt v1
-    ↓
-Evaluation
-    ↓
-Prompt v2
-    ↓
-Evaluation
-    ↓
-Prompt v3
-```
+- Repeatable evaluation rubric（[evaluation-guide.md](../benchmark/evaluation-guide.md)）
+- Prompt v1 vs v2 comparison on fixed repository suite
+- One major improvement per Prompt version
 
 **Requirement:** Every Prompt change must be benchmarked before adoption.
 
@@ -254,7 +248,7 @@ Collect feedback from real users.
 
 **Focus:**
 
-- Is the summary understandable?
+- Is the onboarding guide understandable?
 - Is the reading guide useful?
 - Does the AI correctly identify the project?
 

@@ -60,7 +60,7 @@ Benchmark 的目的不是评价模型，而是评价 **Prompt 的质量**。
 - [ ] 未编造不存在的信息
 - [ ] 总结适合首次阅读项目的新开发者
 
-See ALTER-027 (Prompt Evaluation Checklist).
+See ALTER-032 (Prompt Evaluation Checklist).
 
 ---
 

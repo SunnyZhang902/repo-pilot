@@ -973,7 +973,50 @@ Status: Deferred
 
 ---
 
-## ALTER-026 Prompt Engineering Workflow
+## ALTER-026 Workspace Hash Cache & Git Environment Initialization
+
+**Target Sprint:** Benchmark & Prompt Optimization
+
+### Reason
+
+The previous `workspace/{owner}/{repository}/` layout deepens directory nesting on
+Windows and contributes to path-length failures during clone and checkout.
+
+A hash-based workspace provides a flat, stable cache key for future Cache, Benchmark,
+Chat, and Embedding features while shortening on-disk paths.
+
+### Solution
+
+**WorkspaceManager** (`app/utils/workspace.py`):
+
+- `get_cache_key(url)` → first 10 chars of `sha256(repository_url)`
+- `get_workspace_path(url)` → `workspace/{cache_key}/`
+
+**GitEnvironment** (`app/core/git_environment.py`):
+
+- Runs once at application startup via FastAPI lifespan
+- Ensures `git config --global core.longpaths true` on Windows when needed
+- Failures log WARNING and do not block startup
+
+**RepositoryCloneService**:
+
+- All clone, cache, mkdir, and cleanup operations use `WorkspaceManager`
+- Long-path clone failures return a user-safe HTTP 500 message
+
+### Benefits
+
+- Shorter workspace paths on Windows
+- Unified workspace layout for future cache layers
+- Git long-path support initialized automatically
+- No API, Schema, or Frontend changes
+
+Related: ALTER-010 (Clone Skip Logging), ALTER-023 (Repository Knowledge Cache).
+
+Status: Completed
+
+---
+
+## ALTER-031 Prompt Engineering Workflow
 
 **Target Sprint:** Benchmark & Prompt Optimization
 
@@ -1000,13 +1043,13 @@ Regression Benchmark
 Avoid modifying multiple prompt behaviors in one release — each version should isolate
 one major improvement so benchmark results clearly indicate what worked.
 
-Related: ALTER-027 (Prompt Evaluation Checklist), [prompt-history.md](./prompt-history.md), [benchmark/](./benchmark/).
+Related: ALTER-032 (Prompt Evaluation Checklist), [prompt-history.md](./prompt-history.md), [benchmark/](./benchmark/).
 
 Status: Accepted
 
 ---
 
-## ALTER-027 Prompt Evaluation Checklist
+## ALTER-032 Prompt Evaluation Checklist
 
 **Target Sprint:** Benchmark & Prompt Optimization
 
@@ -1021,39 +1064,169 @@ Establish a standard **Prompt Evaluation Checklist** in [evaluation-guide.md](./
 
 Every Prompt Version must pass the checklist before adoption as a production prompt.
 
-Related: ALTER-026 (Prompt Engineering Workflow), [benchmark-template.md](./benchmark/benchmark-template.md).
+Related: ALTER-031 (Prompt Engineering Workflow), [benchmark-template.md](./benchmark/benchmark-template.md).
 
 Status: Accepted
 
 ---
 
-## ALTER-028 Prompt Template Externalization
+## ALTER-033 Introduce Prompt Template Library
+
+**Target Sprint:** Prompt Engineering
+
+### Reason
+
+`PromptBuilder` previously embedded prompt templates as Python multiline strings.
+As prompts grow (Summary v2, Architecture, Chat, Review), inline strings become hard to
+review, version, and benchmark.
+
+### Solution
+
+Introduce `backend/app/prompts/` as the **Prompt Template Library**:
+
+```
+backend/app/prompts/
+    README.md
+    summary_prompt_v1.md    # Stable
+    summary_prompt_v2.md    # Experimental
+```
+
+- Prompt text lives in human-readable Markdown files
+- Templates use `{{PLACEHOLDER}}` for `RepositoryKnowledge` injection
+- Version history tracked in [prompt-history.md](./prompt-history.md)
+- Changes require Benchmark before adoption
+
+**Status:** Template library established. `PromptBuilder` code integration is the next step (not yet wired).
+
+Related: ALTER-001 (Prompt Template Externalization), ALTER-021 (Prompt Versioning Framework), [prompt-v2.md](./prompt-v2.md).
+
+Status: Completed
+
+---
+
+## ALTER-035 Prompt Template Externalization (PromptBuilder Integration)
 
 **Target Sprint:** Phase 3
 
 ### Reason
 
-`PromptBuilder` currently stores prompt templates directly in Python.
+Templates now exist under `backend/app/prompts/`, but `PromptBuilder` still assembles
+prompts from Python strings. This ALTER tracks wiring the builder to load Markdown
+templates and inject placeholders at runtime.
 
-As prompt complexity increases, templates should be moved into a dedicated `prompts/`
-directory (e.g. `summary.md`, `architecture.md`, `chat.md`, `review.md`).
+**Future direction:** `PromptBuilder` must **not** embed prompt content in Python.
+It should only **load templates by version / capability** and render `RepositoryKnowledge`
+into placeholders. This is a critical step for Prompt A/B testing, Benchmark regression,
+and switching AI capabilities (Summary, Architecture, Chat, Review).
 
-`PromptBuilder` should only be responsible for template rendering and variable injection.
+### Planned Solution
+
+**Option A — Version-aware builder:**
+
+```python
+PromptBuilder(version="v2").build(knowledge)
+```
+
+**Option B — Explicit template loader:**
+
+```python
+PromptLoader.load("summary_prompt_v2.md")
+# → load file from backend/app/prompts/
+# → inject {{PLACEHOLDER}} from RepositoryKnowledge
+# → return final prompt string
+```
+
+Both approaches keep prompt text out of code. Configuration or API metadata can select
+`v1` vs `v2` without changing business services.
+
+```
+RepositoryKnowledge
+        ↓
+PromptLoader / PromptBuilder(version=...)
+        ↓
+backend/app/prompts/summary_prompt_v{version}.md
+        ↓
+Rendered prompt string
+        ↓
+LLMClient
+```
+
+`PromptBuilder` responsibilities after refactor:
+
+- Load template file (by version or explicit path)
+- Inject knowledge placeholders
+- Return assembled prompt — **no inline prompt strings**
 
 ### Benefits
 
-- Easier prompt iteration
-- Cleaner architecture
-- Better collaboration
-- Version management
+- Easier prompt iteration without code deploys
+- Natural **Prompt A/B Test** (swap version via config)
+- **Benchmark / regression** compares v1 vs v2 on same loader path
+- **Multi-capability** — `summary_prompt_v2.md`, `architecture_prompt.md`, `chat_prompt.md` share one loader
+- Cleaner architecture and collaboration (edit Markdown, not Python)
 
-Related: ALTER-001 (Prompt Template Externalization), ALTER-021 (Prompt Versioning Framework), ALTER-024 (Benchmark Automation).
+Related: ALTER-033 (Introduce Prompt Template Library), ALTER-021 (Prompt Versioning Framework), ALTER-024 (Benchmark Automation), ALTER-036 (Introduce Prompt Engine).
 
 Status: Deferred
 
 ---
 
-## ALTER-029 Developer Metrics Mode
+## ALTER-036 Introduce Prompt Engine
+
+**Target Sprint:** Prompt Engine
+
+### Reason
+
+Prompt templates existed under `backend/app/prompts/`, but assembly still lived in
+`services/prompt_builder.py` as Python string concatenation. Prompt content and
+rendering logic remained coupled to the service layer.
+
+### Solution
+
+Introduce `backend/app/prompt/` as a pure Python **Prompt Engine**:
+
+```
+RepositorySummaryService
+        ↓
+  PromptBuilder
+        ↓
+  PromptRegistry      → summary_prompt_v2.md (filename)
+        ↓
+  PromptLoader        → read Markdown template (cached)
+        ↓
+  PromptRenderer      → inject {{PLACEHOLDER}} from RepositoryKnowledge
+        ↓
+  Final Prompt
+        ↓
+  LLMClient
+```
+
+Module responsibilities:
+
+| Module | Role |
+|--------|------|
+| `PromptRegistry` | Map task/version to filename; does not read files |
+| `PromptLoader` | Read `prompts/*.md`; UTF-8; in-memory cache; no knowledge |
+| `PromptRenderer` | Template + knowledge → string; no prompt type awareness |
+| `PromptBuilder` | Orchestration only; no embedded prompt content |
+
+Default summary version: `DEFAULT_SUMMARY_PROMPT` in `app/core/prompt_config.py`.
+
+Legacy `services/prompt_builder.py` removed.
+
+### Benefits
+
+- Prompt 与业务逻辑彻底解耦
+- Enables version switching, Benchmark, and future A/B tests via config
+- Pure module — no FastAPI, LLM, or service dependencies in the engine
+
+Related: ALTER-033 (Prompt Template Library), ALTER-035 (PromptBuilder Integration — superseded by this ALTER).
+
+Status: Completed
+
+---
+
+## ALTER-037 Developer Metrics Mode
 
 **Target Sprint:** Phase 3
 
@@ -1072,6 +1245,120 @@ should eventually be displayed in an optional **Developer Mode** panel instead o
 only backend logs.
 
 This feature is intended for development and debugging, not for normal end users.
+
+Status: Deferred
+
+---
+
+## ALTER-038 Prompt v2 Adoption
+
+**Target Sprint:** Benchmark & Prompt Optimization
+
+### Reason
+
+Prompt v2 has been implemented as `summary_prompt_v2.md` and wired through the
+Prompt Engine. `DEFAULT_SUMMARY_PROMPT` is currently set to `"v2"`, but v2 remains
+**Experimental** until benchmark evaluation completes.
+
+The default prompt should only be promoted to **Stable** after benchmark repositories
+consistently outperform v1 across the evaluation rubric, with no significant regressions.
+
+### Plan
+
+1. Run full benchmark suite on v1 and v2
+2. Compare scores per repository and per metric
+3. Document results in [benchmark/results/](./benchmark/results/)
+4. Promote v2 to Stable only if adoption criteria met; otherwise iterate to v2.1 / v3
+
+Related: ALTER-025 (Prompt Regression Testing), ALTER-040 (AI Onboarding Guide), [prompt-v2.md](./prompt-v2.md).
+
+Status: Accepted
+
+---
+
+## ALTER-039 Repository Knowledge Extractors
+
+**Target Sprint:** Phase 3
+
+### Reason
+
+`RepositoryKnowledgeBuilder` will grow as more extractors are added:
+
+- `DependencyExtractor`
+- `LanguageExtractor`
+- `EntryPointExtractor`
+- `ConfigurationExtractor`
+- `ArchitectureExtractor`
+- …
+
+Without a clear extraction layer, the Builder becomes responsible for both
+orchestration and assembly, violating Single Responsibility Principle.
+
+### Plan
+
+Evolve toward `RepositoryKnowledgePipeline` (see ALTER-020) with dedicated extractors
+under `app/services/knowledge/` (see ALTER-015). Builder remains a pure assembler.
+
+Related: ALTER-015, ALTER-016, ALTER-020.
+
+Status: Deferred
+
+---
+
+## ALTER-040 AI Onboarding Guide
+
+**Target Sprint:** Phase 2.5 / Phase 3
+
+### Reason
+
+RepoPilot's primary AI output is no longer a generic **Repository Summary**.
+
+Prompt v2 repositions the product as an **AI Onboarding Guide** — helping developers
+join a project like a new team member, not merely describing the repository.
+
+Future capabilities (Chat, Architecture Analysis, Reading Guide, Code Review) are
+extensions of this onboarding mission, not separate "summary" features.
+
+### Plan
+
+- Align product language: Summary API → Onboarding output
+- Prompt templates and Benchmark rubrics target onboarding quality
+- Frontend may evolve labels from "AI Summary" to "AI 入职指南" when UX sprint allows
+
+Related: [prompt-v2.md](./prompt-v2.md), ALTER-038 (Prompt v2 Adoption).
+
+Status: Accepted
+
+---
+
+## ALTER-041 Prompt Context Layer
+
+**Target Sprint:** Phase 3
+
+### Reason
+
+The Prompt Engine decouples **template loading/rendering** from business logic, but
+different AI capabilities still need different **slices** of `RepositoryKnowledge`.
+
+Today the full knowledge block is injected into every template. Future capabilities
+need selective context:
+
+```
+RepositoryKnowledge
+        ↓
+PromptContext          # e.g. SummaryPromptContext, ChatPromptContext
+        ↓
+Prompt Template
+        ↓
+Prompt Engine (Renderer)
+        ↓
+LLM
+```
+
+`PromptContext` selects, filters, and transforms knowledge before rendering —
+keeping templates small and capability-specific.
+
+Related: ALTER-022 (Prompt Context Layer), ALTER-036 (Prompt Engine).
 
 Status: Deferred
 
