@@ -749,7 +749,64 @@ Status: Deferred
 
 ---
 
-## ALTER-017 Prompt Context Layer
+## ALTER-019 RepositoryAnalyzer → RepositoryPipelineService
+
+**Target Sprint:** Phase 2 Sprint 6
+
+### Reason
+
+`RepositoryAnalyzer` has evolved into the orchestration entry point for the entire
+Repository Pipeline — it no longer only performs "analyze".
+
+Related: ALTER-009 (RepositoryAnalyzer → RepositoryWorkflow), ALTER-007 (Workflow Layer).
+
+Status: Deferred
+
+---
+
+## ALTER-020 Introduce RepositoryKnowledgePipeline
+
+**Target Sprint:** Phase 2 Sprint 6
+
+### Reason
+
+`RepositoryKnowledgeBuilder` currently coordinates multiple Extractors while also
+assembling `RepositoryKnowledge`.
+
+As the number of Extractors grows, a dedicated `RepositoryKnowledgePipeline` should
+handle orchestration while the Builder remains responsible for object assembly only.
+
+Related: ALTER-015 (Knowledge Extractor Package), ALTER-016 (Dependency Injection for RepositoryKnowledgeBuilder).
+
+Status: Deferred
+
+---
+
+## ALTER-021 Prompt Versioning Framework
+
+**Target Sprint:** Phase 3
+
+### Reason
+
+`PromptBuilder` will gradually support multiple prompt types — Summary, Architecture,
+Chat, Reading Guide, Code Review, and more.
+
+A **Prompt Version** mechanism (e.g. v1, v2, v3) is recommended to enable continuous
+prompt iteration while keeping the API stable.
+
+### Plan
+
+- Version prompts independently of API contracts
+- Allow callers or configuration to select prompt version
+- Track version in summary metadata for reproducibility and debugging
+
+Related: ALTER-001 (Prompt Template Externalization), ALTER-002 (Prompt Registry), ALTER-012 (RepositoryKnowledge).
+
+Status: Deferred
+
+---
+
+## ALTER-022 Prompt Context Layer
 
 **Target Sprint:** Phase 2 Sprint 7
 
@@ -792,7 +849,7 @@ Status: Deferred
 
 ---
 
-## ALTER-018 Repository Knowledge Cache
+## ALTER-023 Repository Knowledge Cache
 
 **Target Sprint:** Phase 2 Sprint 7
 
@@ -837,6 +894,184 @@ Cache missing or hash differs?  → regenerate and persist
 - Knowledge reused across Summary, Chat, Architecture, and Review without re-extraction
 
 Related: ALTER-010 (Clone Skip Logging), ALTER-012 (RepositoryKnowledge), Sprint 7 Scalability tasks.
+
+Status: Deferred
+
+---
+
+## ALTER-024 Benchmark Automation
+
+**Target Sprint:** Phase 3
+
+### Reason
+
+Manual benchmark runs do not scale as the repository list and prompt versions grow.
+A scripted workflow is needed to run evaluations consistently and produce comparable reports.
+
+### Planned Solution
+
+```
+python benchmark.py
+    ↓
+Run all benchmark repositories
+    ↓
+Save Markdown outputs
+    ↓
+Record generation time
+    ↓
+Generate report
+```
+
+### Benefits
+
+- Repeatable benchmark execution with one command
+- Automated artifact collection for prompt history
+- Performance tracking alongside quality scores
+- Foundation for prompt regression testing
+
+Related: [repositories.md](./benchmark/repositories.md), [evaluation-guide.md](./benchmark/evaluation-guide.md), ALTER-025 (Prompt Regression Testing), Phase 2.5 Product Validation.
+
+Status: Deferred
+
+---
+
+## ALTER-025 Prompt Regression Testing
+
+**Target Sprint:** Phase 3
+
+### Reason
+
+Each prompt change can improve one dimension while regressing another. Without
+automated comparison, teams rely on subjective review and miss subtle quality drops.
+
+This is a common **prompt regression testing** practice in AI product development.
+
+### Planned Solution
+
+```
+Prompt v5
+    ↓
+Run Benchmark
+    ↓
+Prompt v4
+    ↓
+Diff
+    ↓
+Report (e.g. tech stack improved, reading guide degraded)
+```
+
+Compare rubric scores and outputs across prompt versions before adopting a new prompt.
+
+### Benefits
+
+- Detect regressions before release
+- Per-metric diff (project understanding, tech stack, reading guide, etc.)
+- Data-driven prompt iteration instead of guesswork
+- Pairs with ALTER-024 (Benchmark Automation), [repositories.md](./benchmark/repositories.md), and [evaluation-guide.md](./benchmark/evaluation-guide.md)
+
+Status: Deferred
+
+---
+
+## ALTER-026 Prompt Engineering Workflow
+
+**Target Sprint:** Benchmark & Prompt Optimization
+
+### Reason
+
+Prompt changes must be traceable and measurable. Without a fixed workflow, multiple
+behaviors may change in a single edit, making it impossible to attribute benchmark
+improvements or regressions to a specific change.
+
+### Workflow
+
+```
+Benchmark
+    ↓
+Problem Analysis
+    ↓
+Single Improvement
+    ↓
+New Prompt Version
+    ↓
+Regression Benchmark
+```
+
+Avoid modifying multiple prompt behaviors in one release — each version should isolate
+one major improvement so benchmark results clearly indicate what worked.
+
+Related: ALTER-027 (Prompt Evaluation Checklist), [prompt-history.md](./prompt-history.md), [benchmark/](./benchmark/).
+
+Status: Accepted
+
+---
+
+## ALTER-027 Prompt Evaluation Checklist
+
+**Target Sprint:** Benchmark & Prompt Optimization
+
+### Reason
+
+A unified checklist ensures every prompt version is reviewed against the same quality
+bar before release, complementing numeric benchmark scores with structured human review.
+
+### Plan
+
+Establish a standard **Prompt Evaluation Checklist** in [evaluation-guide.md](./benchmark/evaluation-guide.md).
+
+Every Prompt Version must pass the checklist before adoption as a production prompt.
+
+Related: ALTER-026 (Prompt Engineering Workflow), [benchmark-template.md](./benchmark/benchmark-template.md).
+
+Status: Accepted
+
+---
+
+## ALTER-028 Prompt Template Externalization
+
+**Target Sprint:** Phase 3
+
+### Reason
+
+`PromptBuilder` currently stores prompt templates directly in Python.
+
+As prompt complexity increases, templates should be moved into a dedicated `prompts/`
+directory (e.g. `summary.md`, `architecture.md`, `chat.md`, `review.md`).
+
+`PromptBuilder` should only be responsible for template rendering and variable injection.
+
+### Benefits
+
+- Easier prompt iteration
+- Cleaner architecture
+- Better collaboration
+- Version management
+
+Related: ALTER-001 (Prompt Template Externalization), ALTER-021 (Prompt Versioning Framework), ALTER-024 (Benchmark Automation).
+
+Status: Deferred
+
+---
+
+## ALTER-029 Developer Metrics Mode
+
+**Target Sprint:** Phase 3
+
+### Reason
+
+Performance metrics such as:
+
+- Clone Time
+- Parse Time
+- Knowledge Build Time
+- Prompt Build Time
+- LLM Time
+- Total Time
+
+should eventually be displayed in an optional **Developer Mode** panel instead of
+only backend logs.
+
+This feature is intended for development and debugging, not for normal end users.
 
 Status: Deferred
 

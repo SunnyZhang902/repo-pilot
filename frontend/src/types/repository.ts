@@ -7,3 +7,16 @@ export interface RepositoryMetadata {
   language: string | null;
   default_branch: string;
 }
+
+export interface RepositoryNode {
+  name: string;
+  path: string;
+  type: "file" | "directory";
+  children: RepositoryNode[];
+}
+
+export interface RepositorySummaryResponse {
+  summary: string;
+  metadata: RepositoryMetadata;
+  tree: RepositoryNode;
+}

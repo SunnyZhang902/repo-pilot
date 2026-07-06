@@ -30,3 +30,5 @@ class RepositoryAnalysis(BaseModel):
 
 class RepositorySummaryResponse(BaseModel):
     summary: str
+    metadata: RepositoryMetadata
+    tree: RepositoryNode

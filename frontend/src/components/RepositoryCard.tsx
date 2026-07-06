@@ -15,19 +15,21 @@ function InfoRow({ label, value }: { label: string; value: string | number }) {
 
 export default function RepositoryCard({ metadata }: RepositoryCardProps) {
   return (
-    <section className="repository-card">
-      <h2 className="section-title">Repository Information</h2>
+    <section className="panel-card repository-card">
+      <h2 className="section-title">仓库信息</h2>
       <dl className="info-list">
-        <InfoRow label="Name" value={metadata.name} />
-        <InfoRow label="Owner" value={metadata.owner} />
+        <InfoRow label="所有者" value={metadata.owner} />
         <InfoRow
-          label="Description"
-          value={metadata.description ?? "No description"}
+          label="描述"
+          value={metadata.description ?? "暂无描述"}
         />
-        <InfoRow label="Language" value={metadata.language ?? "Unknown"} />
+        <InfoRow
+          label="主要语言"
+          value={metadata.language ?? "未知"}
+        />
         <InfoRow label="Stars" value={metadata.stars.toLocaleString()} />
         <InfoRow label="Forks" value={metadata.forks.toLocaleString()} />
-        <InfoRow label="Default Branch" value={metadata.default_branch} />
+        <InfoRow label="默认分支" value={metadata.default_branch} />
       </dl>
     </section>
   );

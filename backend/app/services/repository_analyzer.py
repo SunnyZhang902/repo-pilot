@@ -1,5 +1,5 @@
 from app.core.timer import Timer
-from app.schemas.repository import RepositoryAnalysis
+from app.schemas.repository import RepositoryAnalysis, RepositoryMetadata
 from app.services.github_service import GitHubService
 from app.services.repository_clone_service import RepositoryCloneService
 from app.services.repository_parser_service import RepositoryParserService
@@ -12,6 +12,10 @@ class RepositoryAnalyzer:
         self.github_service = GitHubService()
         self.repository_clone_service = RepositoryCloneService()
         self.repository_parser_service = RepositoryParserService()
+
+    async def get_metadata(self, url: str) -> RepositoryMetadata:
+        """Fetch GitHub repository metadata without cloning or parsing."""
+        return await self.github_service.get_repository_metadata(url)
 
     async def analyze(self, url: str) -> RepositoryAnalysis:
         """

@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RepoPilot",
-  description: "Understand any codebase in minutes with AI",
+  title: "RepoPilot - AI 仓库理解平台",
+  description:
+    "输入 GitHub 仓库地址，AI 自动生成项目总结、技术栈、核心依赖、项目结构与推荐阅读顺序。",
 };
 
 export default function RootLayout({
@@ -23,11 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="app-body">{children}</body>
     </html>
   );
 }
