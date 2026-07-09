@@ -1,0 +1,49 @@
+---
+description: RepoPilot UI design language — Card layout, reusable components, Linear/Vercel-inspired
+globs: frontend/**/*.{tsx,ts,css}
+alwaysApply: false
+---
+
+# UI Design Rules
+
+All RepoPilot UI must follow this design language. Aesthetic reference: **Linear**, **Vercel**, **GitHub**, **Notion**.
+
+## Layout
+
+- **Prefer Card Layout** over long Markdown walls. Break content into scannable cards with clear sections.
+- **Never duplicate layouts.** Extract shared structure into reusable components before adding to a page.
+- **Every new feature → reusable component first.** Do not embed feature UI inline in `page.tsx` when it can be a component.
+
+## Visual Hierarchy
+
+Use three levels consistently:
+
+| Level | Use |
+|-------|-----|
+| **Primary** | Titles, key actions, main metrics |
+| **Secondary** | Supporting labels, section headers |
+| **Muted** | Hints, metadata, timestamps, placeholders |
+
+## Spacing & Surface
+
+- **8px grid** for padding, margin, and gap (`8`, `16`, `24`, `32`…).
+- **Rounded corners** on cards and interactive elements.
+- **Soft shadows** for elevation — subtle, not heavy.
+- **Modern typography** — clear weight/size scale; minimal decoration.
+
+## Component Checklist
+
+Before shipping UI:
+
+- [ ] Content uses cards, not unstyled markdown blocks
+- [ ] Layout lives in a reusable component under `frontend/src/components/`
+- [ ] Primary / Secondary / Muted hierarchy is obvious
+- [ ] Spacing aligns to 8px grid
+- [ ] Styling matches existing RepoPilot patterns (rounded, soft shadow, minimal chrome)
+
+## Anti-patterns
+
+- ❌ Pasting long AI Markdown directly without card/section structure
+- ❌ Copy-pasting the same JSX layout in multiple files
+- ❌ One-off page-only UI that should be a component
+- ❌ Inconsistent spacing or competing visual weights

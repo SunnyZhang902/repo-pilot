@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import type { RepositoryNode } from "@/types/repository";
+import { getTreeDisplayRoots } from "@/utils/normalizeRepositoryTree";
 
 interface RepositoryTreeProps {
   tree: RepositoryNode;
@@ -97,16 +98,11 @@ function TreeNode({
   );
 }
 
-export default function RepositoryTree({ tree }: RepositoryTreeProps) {
+function RepositoryTreeContent({ tree }: RepositoryTreeProps) {
   const [collapsedPaths, setCollapsedPaths] = useState<Set<string>>(
     () => new Set(),
   );
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
-
-  useEffect(() => {
-    setCollapsedPaths(new Set());
-    setSelectedPath(null);
-  }, [tree.path]);
 
   const handleToggleDirectory = useCallback((path: string) => {
     setCollapsedPaths((previous) => {
@@ -124,20 +120,29 @@ export default function RepositoryTree({ tree }: RepositoryTreeProps) {
     setSelectedPath(path);
   }, []);
 
+  const displayRoots = getTreeDisplayRoots(tree);
+
   return (
     <section className="panel-card repository-tree">
       <h2 className="section-title">项目结构</h2>
       <div className="tree-scroll">
         <ul className="tree-root">
-          <TreeNode
-            node={tree}
-            collapsedPaths={collapsedPaths}
-            selectedPath={selectedPath}
-            onToggleDirectory={handleToggleDirectory}
-            onSelectFile={handleSelectFile}
-          />
+          {displayRoots.map((node) => (
+            <TreeNode
+              key={node.path}
+              node={node}
+              collapsedPaths={collapsedPaths}
+              selectedPath={selectedPath}
+              onToggleDirectory={handleToggleDirectory}
+              onSelectFile={handleSelectFile}
+            />
+          ))}
         </ul>
       </div>
     </section>
   );
+}
+
+export default function RepositoryTree({ tree }: RepositoryTreeProps) {
+  return <RepositoryTreeContent key={tree.path} tree={tree} />;
 }

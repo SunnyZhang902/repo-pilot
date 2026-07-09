@@ -1,21 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 import AnalysisProgressTimeline from "@/components/AnalysisProgressTimeline";
-import EmptyState from "@/components/EmptyState";
-import RepositoryCard from "@/components/RepositoryCard";
 import RepositoryForm from "@/components/RepositoryForm";
-import RepositoryTree from "@/components/RepositoryTree";
 import SummaryCard from "@/components/SummaryCard";
 import { importRepository, summarizeRepository } from "@/services/repository";
 import type { AnalysisStageId } from "@/types/analysis";
 import type { RepositoryMetadata, RepositoryNode } from "@/types/repository";
-import {
-  DEFAULT_PROMPT_VERSION,
-  DEFAULT_SUMMARY_MODEL,
-  type SummaryMetadata,
-} from "@/types/summary";
+import { countTreeFiles } from "@/utils/countTreeFiles";
 import { getUserFriendlyError } from "@/utils/error";
 import {
   getRecentRepositories,
@@ -31,9 +25,6 @@ export default function Home() {
   const [metadata, setMetadata] = useState<RepositoryMetadata | null>(null);
   const [tree, setTree] = useState<RepositoryNode | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
-  const [summaryMetadata, setSummaryMetadata] = useState<SummaryMetadata | null>(
-    null,
-  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analysisStage, setAnalysisStage] =
@@ -45,7 +36,11 @@ export default function Home() {
   const analyzingRef = useRef(false);
 
   useEffect(() => {
-    setRecentRepositories(getRecentRepositories());
+    const timer = window.setTimeout(() => {
+      setRecentRepositories(getRecentRepositories());
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   function clearStageTimers() {
@@ -59,14 +54,12 @@ export default function Home() {
     }
 
     analyzingRef.current = true;
-    const pipelineStart = performance.now();
 
     setLoading(true);
     setError(null);
     setMetadata(null);
     setTree(null);
     setSummary(null);
-    setSummaryMetadata(null);
     clearStageTimers();
     setAnalysisStage("fetching_metadata");
 
@@ -90,16 +83,9 @@ export default function Home() {
       const result = await summaryPromise;
       clearStageTimers();
 
-      const generationTimeSeconds = (performance.now() - pipelineStart) / 1000;
-
       setMetadata(result.metadata);
       setTree(result.tree);
       setSummary(result.summary);
-      setSummaryMetadata({
-        model: DEFAULT_SUMMARY_MODEL,
-        promptVersion: DEFAULT_PROMPT_VERSION,
-        generationTimeSeconds,
-      });
       saveRecentRepository(analyzeUrl);
       setRecentRepositories(getRecentRepositories());
     } catch (err) {
@@ -113,50 +99,97 @@ export default function Home() {
     }
   }
 
+  function handleNewAnalysis() {
+    clearStageTimers();
+    setLoading(false);
+    setError(null);
+    setMetadata(null);
+    setTree(null);
+    setSummary(null);
+    setAnalysisStage("fetching_metadata");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   const hasResults = metadata && tree && summary && !loading;
-  const showEmptyState = !loading && !hasResults;
+  const showLanding = !loading && !hasResults;
+  const fileCount = tree ? countTreeFiles(tree) : null;
+  const isLanding = loading || showLanding;
 
   return (
-    <main className="dashboard">
-      <header className="dashboard-header">
-        <h1 className="dashboard-title">RepoPilot</h1>
-      </header>
+    <main
+      className={`dashboard${isLanding ? " dashboard--landing" : ""}${hasResults ? " dashboard--report" : ""}`}
+    >
+      {isLanding ? (
+        <section className="landing-shell">
+          <div className="landing-background" aria-hidden="true" />
+          <motion.header
+            className="landing-brand"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+          >
+            <motion.span
+              className="landing-brand__logo"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              RepoPilot
+            </motion.span>
+          </motion.header>
 
-      <RepositoryForm
-        url={url}
-        onUrlChange={setUrl}
-        onSubmit={handleAnalyze}
-        loading={loading}
-        recentRepositories={recentRepositories}
-      />
+          <div className="landing-hero">
+            <motion.div
+              className="landing-hero__content"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.32, ease: "easeOut" }}
+            >
+              <h1 className="landing-hero__title">
+                30秒读懂新项目
+              </h1>
+              <p className="landing-hero__subtitle">
+                输入GitHub仓库地址，快速入手项目代码
+              </p>
 
-      {loading && (
-        <AnalysisProgressTimeline currentStage={analysisStage} />
-      )}
+              <RepositoryForm
+                url={url}
+                onUrlChange={setUrl}
+                onSubmit={handleAnalyze}
+                loading={loading}
+                recentRepositories={recentRepositories}
+              />
+            </motion.div>
 
-      {error && <p className="error-message">{error}</p>}
-
-      {(loading || hasResults || showEmptyState) && (
-        <div className="dashboard-grid">
-          <div className="dashboard-column dashboard-column--info">
-            {hasResults && (
-              <>
-                <RepositoryCard metadata={metadata} />
-                <RepositoryTree tree={tree} />
-              </>
+            {loading && (
+              <AnalysisProgressTimeline currentStage={analysisStage} />
             )}
           </div>
-          <div className="dashboard-column dashboard-column--summary">
-            {showEmptyState && <EmptyState />}
-            {(loading || hasResults) && (
+
+          {error && <p className="error-message error-message--landing">{error}</p>}
+
+          <footer className="landing-footer" aria-label="技术支持">
+            <span>技术支持</span>
+            <strong>FastAPI</strong>
+            <strong>Next.js</strong>
+            <strong>DeepSeek</strong>
+          </footer>
+        </section>
+      ) : (
+        <>
+          {error && <p className="error-message">{error}</p>}
+
+          <div className="dashboard-grid dashboard-grid--with-report">
+            <div className="dashboard-column dashboard-column--summary">
               <SummaryCard
                 summary={summary}
                 loading={loading}
-                metadata={summaryMetadata}
+                repositoryMetadata={metadata}
+                fileCount={fileCount}
+                onNewAnalysis={handleNewAnalysis}
               />
-            )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </main>
   );

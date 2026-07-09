@@ -1,99 +1,68 @@
 "use client";
 
-import { useState } from "react";
-import Markdown from "react-markdown";
+import { useEffect, useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 
-import type { SummaryMetadata } from "@/types/summary";
+import ReportLayout, {
+  ReportLayoutSkeleton,
+} from "@/components/report/ReportLayout";
+import type { RepositoryMetadata } from "@/types/repository";
 
 interface SummaryCardProps {
   summary?: string | null;
   loading?: boolean;
-  metadata?: SummaryMetadata | null;
-}
-
-const SKELETON_LINE_WIDTHS = ["100%", "92%", "78%", "88%", "65%"];
-
-function SummarySkeleton() {
-  return (
-    <div className="summary-skeleton" aria-hidden="true">
-      {SKELETON_LINE_WIDTHS.map((width, index) => (
-        <span
-          key={index}
-          className="summary-skeleton-line"
-          style={{ width }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function SummaryMetadataBar({ metadata }: { metadata: SummaryMetadata }) {
-  return (
-    <dl className="summary-metadata">
-      <div className="summary-metadata-item">
-        <dt className="summary-metadata-label">模型</dt>
-        <dd className="summary-metadata-value">{metadata.model}</dd>
-      </div>
-      <div className="summary-metadata-item">
-        <dt className="summary-metadata-label">Prompt 版本</dt>
-        <dd className="summary-metadata-value">{metadata.promptVersion}</dd>
-      </div>
-      <div className="summary-metadata-item">
-        <dt className="summary-metadata-label">生成耗时</dt>
-        <dd className="summary-metadata-value">
-          {metadata.generationTimeSeconds.toFixed(2)}s
-        </dd>
-      </div>
-    </dl>
-  );
+  repositoryMetadata?: RepositoryMetadata | null;
+  fileCount?: number | null;
+  onNewAnalysis?: () => void;
 }
 
 export default function SummaryCard({
   summary,
   loading = false,
-  metadata = null,
+  repositoryMetadata = null,
+  fileCount = null,
+  onNewAnalysis,
 }: SummaryCardProps) {
-  const [copied, setCopied] = useState(false);
+  const [showGenerated, setShowGenerated] = useState(false);
 
-  async function handleCopy() {
-    if (!summary) {
-      return;
-    }
+  const projectName = repositoryMetadata
+    ? `${repositoryMetadata.owner}/${repositoryMetadata.name}`
+    : "Repository Report";
 
-    try {
-      await navigator.clipboard.writeText(summary);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard unavailable — no-op
+  useEffect(() => {
+    if (!loading && summary) {
+      const showTimer = window.setTimeout(() => setShowGenerated(true), 0);
+      const hideTimer = window.setTimeout(() => setShowGenerated(false), 1400);
+      return () => {
+        window.clearTimeout(showTimer);
+        window.clearTimeout(hideTimer);
+      };
     }
-  }
+  }, [loading, summary]);
 
   return (
-    <section className="panel-card summary-card">
+    <section className="panel-card summary-card summary-card--report">
+      {showGenerated && (
+        <div className="report-generated-toast" role="status">
+          <CheckCircle2 size={18} strokeWidth={2} />
+          项目报告已生成
+        </div>
+      )}
       <div className="summary-card-header">
-        <h2 className="section-title summary-card-title">AI 总结</h2>
-        {!loading && summary && (
-          <button
-            type="button"
-            className="copy-button"
-            onClick={handleCopy}
-            aria-label="复制 Markdown"
-          >
-            {copied ? "已复制" : "复制 Markdown"}
-          </button>
-        )}
+        <h2 className="section-title summary-card-title">项目报告</h2>
       </div>
 
-      {metadata && !loading && <SummaryMetadataBar metadata={metadata} />}
-
-      <div className="summary-content">
+      <div className="summary-content summary-content--report">
         {loading ? (
-          <SummarySkeleton />
+          <ReportLayoutSkeleton />
         ) : summary ? (
-          <div className="markdown-body">
-            <Markdown>{summary}</Markdown>
-          </div>
+          <ReportLayout
+            markdown={summary}
+            projectName={projectName}
+            repositoryMetadata={repositoryMetadata}
+            fileCount={fileCount}
+            onNewAnalysis={onNewAnalysis}
+          />
         ) : null}
       </div>
     </section>

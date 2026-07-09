@@ -126,7 +126,11 @@ results/
 | [benchmark-results.md](./benchmark-results.md) | Aggregate run log (legacy template) |
 | [evaluation-rubric.md](./evaluation-rubric.md) | Alternate rubric (0–2 scale, legacy) |
 | [prompt-history/](./prompt-history/) | Per-version detail records |
+| [../PROMPT_ENGINEERING.md](../PROMPT_ENGINEERING.md) | Prompt engineering methodology |
+| [../prompt-workflow.md](../prompt-workflow.md) | Nine-stage prompt lifecycle |
+| [../prompt-guidelines.md](../prompt-guidelines.md) | Universal prompt design guidelines |
 | [../prompt-history.md](../prompt-history.md) | Prompt version changelog |
+| [../prompt-issues.md](../prompt-issues.md) | Cross-repository Prompt issue tracker |
 | [results/](./results/) | Per-version benchmark output archive |
 | [results/result-template.md](./results/result-template.md) | Single-repository result template |
 

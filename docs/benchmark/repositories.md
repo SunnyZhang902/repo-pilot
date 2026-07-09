@@ -14,11 +14,11 @@ RepoPilot 使用固定的 Benchmark Repository 来评估 AI Summary 的质量。
 
 | Category | Repository | URL | Status |
 |----------|------------|-----|--------|
-| Self Project | RepoPilot | https://github.com/SunnyZhang902/repo-pilot | Pending |
-| AI Framework | LangGraph | https://github.com/langchain-ai/langgraph | Pending |
-| Python Web | FastAPI | https://github.com/fastapi/fastapi | Pending |
-| Frontend | Next.js | https://github.com/vercel/next.js | Pending |
-| Python Framework | Django | https://github.com/django/django | Pending |
+| Self Project | RepoPilot | https://github.com/SunnyZhang902/repo-pilot | Evaluated (v2) |
+| AI Framework | LangGraph | https://github.com/langchain-ai/langgraph | Evaluated (v2) |
+| Python Web | FastAPI | https://github.com/fastapi/fastapi | Evaluated (v2) |
+| Frontend | Next.js | https://github.com/vercel/next.js | Evaluated (v2) |
+| Python Framework | Django | https://github.com/django/django | Evaluated (v2) |
 | Java | Spring PetClinic | https://github.com/spring-projects/spring-petclinic | Pending |
 | Go | Gin | https://github.com/gin-gonic/gin | Pending |
 | Rust | Tokio | https://github.com/tokio-rs/tokio | Pending |

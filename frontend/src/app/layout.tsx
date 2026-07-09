@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RepoPilot - AI 仓库理解平台",
+  title: "RepoPilot - 仓库理解平台",
   description:
-    "输入 GitHub 仓库地址，AI 自动生成项目总结、技术栈、核心依赖、项目结构与推荐阅读顺序。",
+    "输入 GitHub 仓库地址，自动生成项目总结、技术栈、核心依赖、项目结构与推荐阅读顺序。",
 };
 
 export default function RootLayout({

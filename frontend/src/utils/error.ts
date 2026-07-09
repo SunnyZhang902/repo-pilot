@@ -23,7 +23,7 @@ export function getUserFriendlyError(message: string): string {
   }
 
   if (message.includes("LLM") || message.includes("DeepSeek")) {
-    return "AI 服务暂时不可用，请稍后重试。";
+    return "服务暂时不可用，请稍后重试。";
   }
 
   return DEFAULT_ERROR_MESSAGE;

@@ -1364,6 +1364,316 @@ Status: Deferred
 
 ---
 
+## ALTER-042 Prompt v2 Benchmark Baseline
+
+**Target Sprint:** Phase 2.5 — Prompt Engineering
+
+### Reason
+
+Prompt v2（AI Onboarding Guide）需要可复现的 Benchmark 证据，才能支撑 ALTER-038 中的 Stable 晋升决策。
+在 Promote v2 为默认 Prompt 之前，必须对固定 Benchmark Repository Suite 建立基线评分与问题清单。
+
+### Completed
+
+- 对 Benchmark Suite 中 **5 / 10** 个仓库运行 Prompt v2（DeepSeek Chat），生成完整报告：
+  - [repopilot.md](./benchmark/results/v2/repopilot.md)
+  - [langgraph.md](./benchmark/results/v2/langgraph.md)
+  - [fastapi.md](./benchmark/results/v2/fastapi.md)
+  - [nextjs.md](./benchmark/results/v2/nextjs.md)
+  - [django.md](./benchmark/results/v2/django.md)
+- 建立 [v2 Benchmark README](./benchmark/results/v2/README.md)：平均分 **36.0 / 40**，Prompt 状态 **Experimental**
+- 更新 [prompt-history.md](./prompt-history.md) Benchmark Progress 与 [TASK.md](./TASK.md) 进度
+
+### Findings (Summary)
+
+- v2 onboarding 结构（项目适合谁、阅读顺序、开发建议）整体优于 v1 摘要模式
+- 仍存 README-centric、依赖分析不稳定、推测性内容、超大型 monorepo 深度不足等问题
+- Django 得分最低（31/40），为核心 Prompt 改进优先级
+
+### Remaining
+
+- 完成剩余 5 个仓库 Benchmark
+- v1 vs v2 同维度对比
+- Prompt 迭代后重新跑分
+
+Related: ALTER-038 (Prompt v2 Adoption), ALTER-040 (AI Onboarding Guide), [evaluation-guide.md](./benchmark/evaluation-guide.md).
+
+Status: **Completed**（基线 Benchmark 文档；全量 Suite 与 Stable 晋升仍待后续 Sprint）
+
+---
+
+## ALTER-043 Introduce Prompt Issue Database
+
+**Target Sprint:** Phase 2.5 — Prompt Quality Engineering
+
+### Reason
+
+Prompt v2 基线 Benchmark（ALTER-042）在 5 个仓库上暴露了多类重复问题：README-centric 输出、架构解释偏浅、阅读指南偏文件导向、依赖分析偏列举、推测性表述等。
+
+若仅依赖各仓库 Benchmark 报告的 Weaknesses 章节驱动改进，问题难以跨版本追踪，Prompt 迭代容易回到直觉驱动。需要独立的 **Issue Database**，将仓库级观察提炼为可复用的 Prompt Issue，并建立 Open → Planned → Resolved → Verified 生命周期。
+
+### Completed
+
+- 创建 [prompt-issues.md](./prompt-issues.md) — 首批 5 个 Issue（PI-001 – PI-005）
+- 建立 [prompt/README.md](./prompt/README.md) — Prompt 文档索引，纳入 Issue Database
+- 更新 [TASK.md](./TASK.md) — Sprint Prompt Quality Engineering
+
+### Impact
+
+Prompt 演进由 **Issue-driven** 替代 **intuition-driven**：
+
+- Benchmark 报告 → 发现仓库级现象
+- Prompt Issue Database → 归类、定优先级、关联 Prompt Version
+- 未来 Prompt Version 成功标准 = Benchmark 分数提升 + 相关 Issue Verified
+
+Related: ALTER-042 (Prompt v2 Benchmark Baseline), ALTER-031 (Prompt Engineering Workflow), [prompt-issues.md](./prompt-issues.md).
+
+Status: **Completed**
+
+---
+
+## ALTER-044 Introduce Prompt Workflow
+
+**Target Sprint:** Phase 2.5 — Prompt Engineering Methodology
+
+### Reason
+
+Benchmark、Issue Database、设计、实现、Regression、Adoption 等环节此前分散在 ALTER-031、benchmark/README、prompt-issues 等多处，缺少单一的**阶段化工作流**说明。维护者与贡献者需要一份文档明确每阶段的 Purpose、Input、Output、Owner 与 Success Criteria。
+
+### Completed
+
+- 创建 [prompt-workflow.md](./prompt-workflow.md) — 九阶段流程与 Promotion Rule
+- 更新 [prompt/README.md](./prompt/README.md) — 纳入 Core Methodology Documents
+
+Related: ALTER-031, ALTER-043, [PROMPT_ENGINEERING.md](./PROMPT_ENGINEERING.md).
+
+Status: **Completed**
+
+---
+
+## ALTER-045 Introduce Prompt Design Guidelines
+
+**Target Sprint:** Phase 2.5 — Prompt Engineering Methodology
+
+### Reason
+
+Prompt v2 与 Benchmark 暴露了 README-centric、推测性内容、文件导向阅读指南等反模式。需要跨能力（Summary、Chat、Architecture Analysis 等）统一的**设计规范**，而非仅在单个 prompt-v2.md 中隐含约定。
+
+### Completed
+
+- 创建 [prompt-guidelines.md](./prompt-guidelines.md) — 12 条 Core Principles、Anti-Patterns、Future Prompt Types Checklist
+
+Related: ALTER-040 (AI Onboarding Guide), [prompt-issues.md](./prompt-issues.md) (PI-001 – PI-005).
+
+Status: **Completed**
+
+---
+
+## ALTER-046 Document Prompt Engineering Methodology
+
+**Target Sprint:** Phase 2.5 — Prompt Engineering Methodology
+
+### Reason
+
+RepoPilot Phase 2.5 已具备 Prompt Engine、Benchmark Infrastructure、Issue Database 与 v2 基线结果，但缺少一份**顶层方法论**文档，说明 Prompt 开发如何作为软件工程流程运作（Benchmark First、Issue-driven、Regression、Adoption）。
+
+### Completed
+
+- 创建 [PROMPT_ENGINEERING.md](./PROMPT_ENGINEERING.md) — 哲学、架构、Engine 组件、完整生命周期、Prompt as Software
+- 更新 [README.md](../README.md) — issue-driven 工作流简述
+- 更新 [TASK.md](./TASK.md) — Sprint Prompt Engineering Methodology ✅
+
+### Impact
+
+Prompt 开发现具备完整文档链：
+
+```
+PROMPT_ENGINEERING.md (why & how)
+    → prompt-workflow.md (stages)
+    → prompt-guidelines.md (design rules)
+    → prompt-issues.md (tracking)
+    → benchmark/ (evidence)
+```
+
+Prompt 被视为**软件**而非文本：有设计、实现、测试（Benchmark）、Bug 追踪（Issue）、发布（Adoption）。
+
+Related: ALTER-036 (Prompt Engine), ALTER-038 (Adoption), ALTER-042, ALTER-043, ALTER-044, ALTER-045.
+
+Status: **Accepted**
+
+---
+
+## ALTER-047 Prompt v2.1
+
+**Target Sprint:** Phase 2.5 — Prompt Engineering
+
+### Reason
+
+Prompt v2 基线 Benchmark（ALTER-042）与 [Prompt Issue Database](./prompt-issues.md) 登记了 5 个 Open Issue（PI-001 – PI-005）：README-centric 输出、架构解释偏浅、阅读指南缺学习策略、依赖分析偏列举、推测性表述。
+
+按 [prompt-workflow.md](./prompt-workflow.md) Issue-driven 流程，在**不修改 Prompt Engine / PromptBuilder / 应用代码**的前提下，迭代 `summary_prompt_v2.md` 模板指令以 address 上述问题。
+
+### Completed
+
+- 更新 [summary_prompt_v2.md](../backend/app/prompts/summary_prompt_v2.md)（v2.1 内容迭代，Registry 仍为 `v2`）
+- **PI-001：** README 仅作 Knowledge 来源之一；禁止逐段 paraphrase
+- **PI-002：** 项目结构聚焦系统组织（Why、工程问题、模块协作）
+- **PI-003：** 推荐阅读按目标分路径（使用 / 贡献 / 架构），WHY 必填
+- **PI-004：** 核心依赖写协作链，Top 3–5 runtime
+- **PI-005：** 低置信度用「仓库表明…」；禁止编造
+- 新增 `# AI Insights` 章节；强化「项目适合谁」
+- 更新 [prompt-history.md](./prompt-history.md)、[TASK.md](./TASK.md)
+
+### Remaining
+
+- Regression Benchmark on Found-in repos
+- PI-001 – PI-005 状态 Open → Verified（待 Benchmark 证据）
+
+Related: ALTER-042, ALTER-043, [prompt-issues.md](./prompt-issues.md), [prompt-guidelines.md](./prompt-guidelines.md).
+
+Status: **Completed**（模板修订；Issue Verified 待 Regression）
+
+---
+
+## ALTER-048 Repository Understanding → Repository + Code Understanding
+
+**Target Milestone:** Milestone V2 — Repository + Code Understanding
+
+### Background
+
+The current version of RepoPilot focuses on **repository-level understanding**.
+
+It builds project reports mainly from:
+
+- Repository structure
+- README
+- Documentation
+- Configuration files
+- Dependency manifests
+
+This design allows RepoPilot to generate a useful onboarding report very quickly.
+
+However, evaluation on several representative repositories
+(RepoPilot, LangGraph, FastAPI, Next.js, Django)
+shows a common limitation:
+
+**Reports understand the repository, but do not truly understand the implementation.**
+
+The system rarely explains:
+
+- why a module is important
+- how components collaborate
+- real function call chains
+- actual implementation details
+
+Most architecture descriptions are inferred from documentation rather than source code.
+
+Related: ALTER-006 (CodeIndexer), ALTER-012 (RepositoryKnowledge), ALTER-042 (Prompt v2 Benchmark Baseline), [prompt-issues.md](./prompt-issues.md) (PI-002, PI-005).
+
+### Decision
+
+Upgrade RepoPilot from:
+
+**Repository Understanding**
+
+to:
+
+**Repository + Code Understanding**
+
+A repository report should be generated from **both**:
+
+- documentation
+- source code
+
+instead of documentation alone.
+
+### Design Principles
+
+| Layer | Responsibility |
+|-------|----------------|
+| **Repository Understanding** | project overview, technologies, documentation, onboarding, repository organization |
+| **Code Understanding** | function analysis, class analysis, call graph, module dependency graph, implementation summary, architecture validation |
+
+The final report should **combine both views**.
+
+```
+Repository Knowledge (docs + tree + deps)
+        +
+Code Knowledge (AST + graphs + symbols)
+        ↓
+Enhanced Onboarding Report
+```
+
+### Expected Improvements
+
+After this upgrade RepoPilot should be able to answer questions like:
+
+- Why is this module important?
+- How does a request travel through the system?
+- Which files implement the core workflow?
+- Which modules have the highest coupling?
+- Where should a new contributor start reading?
+
+instead of only:
+
+- What modules exist?
+
+### Non-goals
+
+The first version will **not** perform:
+
+- semantic bug detection
+- code quality scoring
+- vulnerability analysis
+- full static program analysis
+
+Those features can be introduced later.
+
+### Implementation
+
+See [TASK.md](./TASK.md) — **Milestone V2 — Repository + Code Understanding** (Phase 1 – Phase 7).
+
+Status: **Accepted**
+
+---
+
+## UI Backlog
+
+Frontend presentation improvements tracked separately from architecture ALTERs. See also Report UI V2（Hero / Sidebar / SectionCard）.
+
+### Hero Metadata Enhancement
+
+**Status:** Planned — deferred to post PR2 (Report UI V2 / Information Architecture). PR2 focuses on section-level IA; Hero badge metadata is a separate productization pass.
+
+Current Hero only displays:
+
+- Project Name
+- One-line Summary
+- Difficulty
+- Learning Time
+- Audience
+- Overall Score
+
+Future improvements:
+
+- Generated by RepoPilot
+- Analysis Time (e.g. 32s)
+- Repository Name
+- Default Branch
+- Last Commit Time
+- Stars / Forks
+- Last Updated
+- Repository Size
+- Language Breakdown
+
+These metadata should be shown as **lightweight badges** instead of large cards to keep Hero clean.
+
+Related: [TASK.md](./TASK.md) — UI → Hero Metadata Enhancement.
+
+Status: **Planned**
+
+---
+
 ## Guiding Principles
 
 1. Every module should have a single responsibility.
